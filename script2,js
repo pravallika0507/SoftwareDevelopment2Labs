@@ -1,0 +1,12 @@
+function msg() {
+    document.write("You clicked the button!");
+}
+
+function change() {
+    document.getElementById("my_text").innerHTML = "You clicked me";
+}
+
+var names = ["Lisa", "Arturo", "Kimia", "Kevin"]; // Creating an array of strings
+for (var name of names) {
+  document.write(name + "<br>");
+}
