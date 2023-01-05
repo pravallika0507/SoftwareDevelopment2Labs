@@ -4,6 +4,8 @@ const express = require("express");
 // Create express app
 var app = express();
 
+app.use(express.urlencoded({ extended: true }));
+
 // Add static files location
 app.use(express.static("static"));
 
@@ -18,6 +20,7 @@ const db = require('./services/db');
 // Get the models
 const { Student } = require("./models/student");
 
+const programmes = require("./models/programmes");
 
 // Create a route for root - /
 app.get("/", function(req, res) {
@@ -53,15 +56,16 @@ app.get("/all-students-formatted", function(req, res) {
 });
 
 // Task 3 single student page
-app.get("/student-single/:id", async function (req, res) {
+app.get("/single-student/:id", async function (req, res) {
     var stId = req.params.id;
     // Create a student class with the ID passed
     var student = new Student(stId);
-    await student.getStudentName();
+    await student.getStudentDetails();
     await student.getStudentProgramme();
     await student.getStudentModules();
+    resultProgs = await programmes.getAllProgrammes();
     console.log(student);
-    res.render('student', {student:student});
+    res.render('student', {'student':student, 'programmes':resultProgs});
 });
 
 
@@ -216,4 +220,48 @@ app.get("/hello/:name", function(req, res) {
 // Start server on port 3000
 app.listen(3000,function(){
     console.log(`Server running at http://127.0.0.1:3000/`);
+});
+
+app.post('/add-note', function (req, res) {
+    // Adding a try/catch block which will be useful later when we add to the database
+    try {
+        // Just a console.log for now to check we are receiving the form field values
+        console.log(req.body);
+     } catch (err) {
+         console.error(`Error while adding note `, err.message);
+     }
+     // Just a little output for now
+     res.redirect('/student-single/' + params.id);
+
+});
+
+app.post('/add-note', async function (req, res) {
+    params = req.body;
+    // Adding a try/catch block which will be useful later when we add to the database
+    var student = new Student(params.id);
+    try {
+         await student.addStudentNote(params.note);
+         res.send('form submitted');
+        }
+     catch (err) {
+         console.error(`Error while adding note `, err.message);
+     }
+     // Just a little output for now
+     res.send('form submitted');
+
+});
+
+// A post route to recieve new data for a students' programme
+// A post route to recieve new data for a students' programme
+app.post('/allocate-programme', function (req, res) {
+    params = req.body;
+    var student = new Student(params.id)
+    // Adding a try/catch block which will be useful later when we add to the database
+    try {
+        student.updateStudentProgramme(params.programme).then(result => {
+            res.redirect('/single-student/' + params.id);
+        })
+     } catch (err) {
+         console.error(`Error while adding programme `, err.message);
+     }
 });

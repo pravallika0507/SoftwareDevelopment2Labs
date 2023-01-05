@@ -12,17 +12,21 @@ class Student {
     programme;
     // Student modules: array of type Module
     modules = [];
+    // Student note
+    note;
+ 
 
     constructor(id) {
         this.id = id;
     }
     
     // Gets the student name from the database
-    async getStudentName() {
+    async getStudentDetails() {
         if (typeof this.name !== 'string') {
             var sql = "SELECT * from Students where id = ?"
             const results = await db.query(sql, [this.id]);
             this.name = results[0].name;
+            this.note = results[0].note;
         }
 
     }
@@ -48,6 +52,38 @@ class Student {
         for(var row of results) {
             this.modules.push(new Module(row.code, row.name));
         }
+    }
+
+    async addStudentNote(note) {
+        var sql = "UPDATE Students SET note = ? WHERE Students.id = ?"
+        const result = await db.query(sql, [note, this.id]);
+        // Ensure the note property in the model is up to date
+        this.note = note;
+        return result;
+    }
+
+    async deleteStudentProgramme(programme) {
+        var sql = "DELETE FROM Student_Programme WHERE id = ?";
+        const result = await db.query(sql, [this.id]);
+        // Ensure the note property in the model is up to date
+        this.programme = '';
+        return result;
+    }
+
+    async addStudentProgramme(programme) {
+        var sql = "INSERT INTO Student_Programme (id, programme) VALUES (?, ?)";
+        const result = await db.query(sql, [this.id, programme]);
+        // Ensure the note property in the model is up to date
+        this.programme = programme;
+        return result;
+    }
+
+    async updateStudentProgramme(programme) {
+        const existing  = await this.getStudentProgramme();
+        if(this.programme) {
+            await this.deleteStudentProgramme(programme);
+        }
+        await this.addStudentProgramme(programme);
     }
 }
 
